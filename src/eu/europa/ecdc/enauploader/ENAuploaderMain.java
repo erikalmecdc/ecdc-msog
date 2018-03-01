@@ -8,7 +8,7 @@ import java.util.UUID;
 public class ENAuploaderMain {
 
 	// This is a command line version
-	public static void main(String[] args) {
+	public static void main2(String[] args) {
 		//args: 
 		//Center
 		//Project id ("" means create new project) "PRJEB25143"
@@ -44,7 +44,7 @@ public class ENAuploaderMain {
 	
 	
 	//Example code for use of the library, rename to main to run it
-	public static void main2(String[] args) {
+	public static void main(String[] args) {
 		
 		//Init tmp folder
 		ENAUtils.init();

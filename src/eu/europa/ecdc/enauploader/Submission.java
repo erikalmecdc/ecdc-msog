@@ -19,8 +19,8 @@ import it.sauronsoftware.ftp4j.FTPClient;
 public class Submission extends DatabaseEntity {
 
 	//Default account settings
-	public String LOGIN = "Webin-NNN";
-	public String PASSWORD = "xxxxx";
+	public String LOGIN = "Webin-49012";
+	public String PASSWORD = "AfzD83";
 	public String API_URL = "https://www-test.ebi.ac.uk/ena/submit/drop-box/submit/?auth=ENA";
 	
 	
