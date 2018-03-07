@@ -1,5 +1,9 @@
 package eu.europa.ecdc.enauploader;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,18 +16,10 @@ import it.sauronsoftware.ftp4j.FTPIllegalReplyException;
 
 public class ENAUtils {
 
-	public static final String FTP_HOST = "webin.ebi.ac.uk";
-	public static final String TMP_PATH = "C:/ENAtmp/";
-	public static final String CURL_PATH = "T:/Epidemiological Methods/MolecularSurveillance/Software/curl.exe";
-	
-	
-	public static void init() {
-		File tmpDir = new File(TMP_PATH);
-		tmpDir.mkdirs();
-	}
 
-	
-	
+
+
+
 	public static String getTaxid(String taxon) {
 
 		switch (taxon) {
@@ -36,6 +32,97 @@ public class ENAUtils {
 			return "562";
 		default:
 			return "0";
+		}
+	}
+
+	public static String[] readCsvHeader(File csvFile) {
+		String line;
+
+
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(csvFile));
+
+			line = br.readLine();
+			br.close();
+			String[] header = line.split(",",-1);
+			return header;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public static String[][] readCsv(File csvFile, boolean header) {
+		
+		
+		String line;
+		ArrayList<String[]> rowData = new ArrayList<String[]>();
+		int cols = 0;
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(csvFile));
+			if (header) {
+				line = br.readLine();
+				String[] fields = line.split(",",-1);
+				if (fields.length>cols) {
+					cols = fields.length; 
+				}
+			}
+			while ((line = br.readLine())!=null) {
+				if (line.equals("")) {
+					break;
+				}
+				String[] fields = line.split(",",-1);
+				if (fields.length>cols) {
+					cols = fields.length; 
+				}
+				if (fields[0].equals("")) {
+					break;
+				}
+				rowData.add(fields);
+			}
+
+			br.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		String[][] data = new String[rowData.size()+1][cols];
+		int i = 0;
+		for (String[] rowdat : rowData) {
+			
+			for (int j = 0;j<rowdat.length;j++) {
+				data[i][j] = rowdat[j];
+			}
+			i++;
+			
+		}
+		return data;
+
+	}
+
+	public static void writeCsv(File file, String title, String[][] data, String[] header) {
+		BufferedWriter bw;
+		try {
+			bw = new BufferedWriter(new FileWriter(file));
+			
+			if (title!=null) {
+				bw.write(title+"\n");
+			}
+			
+			String row = String.join(",", header);
+			bw.write(row+"\n");
+			for (int i = 0; i< data.length;i++) {
+				if (data[i][0]==null) {
+					break;
+				}
+				String drow = String.join(",", data[i]);
+				bw.write(drow+"\n");
+			}
+			
+			bw.close();
+		} catch (IOException e) {
+			
+			e.printStackTrace();
 		}
 	}
 }

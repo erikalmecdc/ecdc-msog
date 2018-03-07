@@ -10,8 +10,8 @@ public class Project extends DatabaseEntity {
 	String description;
 	
 	
-	Project(String c, String a) {
-		super(c,a);
+	Project(String c, String a, Submission s) {
+		super(c,a,s);
 		description = a;
 		type = "PROJECT";
 	}

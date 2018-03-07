@@ -14,8 +14,8 @@ public class Experiment extends DatabaseEntity {
 	
 	private String instrument;
 
-	Experiment(String c, String a, String studyAcc, String sampleAcc) {
-		super(c, a);
+	Experiment(String c, String a, String studyAcc, String sampleAcc, Submission s) {
+		super(c, a, s);
 		
 		pairedDistance = "500";
 		pairedDistanceSdev = "200.0";
@@ -54,7 +54,7 @@ public class Experiment extends DatabaseEntity {
 			bw.write("<LIBRARY_SOURCE>GENOMIC</LIBRARY_SOURCE>\n");
 			bw.write("<LIBRARY_SELECTION>RANDOM</LIBRARY_SELECTION>\n");
 			bw.write("<LIBRARY_LAYOUT>\n");
-			if (instrument.matches(".*Illumina.*")) {
+			if (instrument.toLowerCase().matches(".*illumina.*")) {
 				bw.write("<PAIRED NOMINAL_LENGTH=\""+pairedDistance+"\" NOMINAL_SDEV=\""+pairedDistanceSdev+"\"/>\n");
 			} else {
 				bw.write("<SINGLE/>\n");
@@ -64,14 +64,18 @@ public class Experiment extends DatabaseEntity {
 			bw.write("</LIBRARY_DESCRIPTOR>\n");
 			bw.write("</DESIGN>\n");
 			bw.write("<PLATFORM>\n");
-			if (instrument.matches(".*Illumina.*")) {
+			if (instrument.toLowerCase().matches(".*illumina.*")||instrument.toLowerCase().matches(".*nextseq.*")||instrument.toLowerCase().matches(".*hiseq.*")) {
 				bw.write("<ILLUMINA>\n");
 				bw.write("<INSTRUMENT_MODEL>"+instrument+"</INSTRUMENT_MODEL>\n");
 				bw.write("</ILLUMINA>\n");	
-			} else if(instrument.matches(".*Ion Torrent.*")) {
+			} else if(instrument.toLowerCase().matches(".*ion torrent.*")) {
 				bw.write("<ION_TORRENT>\n");
 				bw.write("<INSTRUMENT_MODEL>"+instrument+"</INSTRUMENT_MODEL>\n");
 				bw.write("</ION_TORRENT>\n");	
+			} else if(instrument.toLowerCase().matches(".*pac bio.*") || instrument.toLowerCase().matches(".*sequel.*")) {
+				bw.write("<PACBIO_SMRT>\n");
+				bw.write("<INSTRUMENT_MODEL>"+instrument+"</INSTRUMENT_MODEL>\n");
+				bw.write("</PACBIO_SMRT>\n");	
 			}
 			bw.write("</PLATFORM>\n");
 			bw.write("</EXPERIMENT>\n");

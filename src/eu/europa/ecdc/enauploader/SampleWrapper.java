@@ -21,14 +21,14 @@ public class SampleWrapper {
 	}
 	
 	
-	SampleWrapper(String center, String project, String basename) {
+	SampleWrapper(String center, String project, String basename, Submission s) {
 		String expName = "exp_"+basename;
 		String sampleName = "sam_"+basename;
 		String runName = "run_"+basename;
 		
-		sample = new Sample(center,sampleName);
-		experiment = new Experiment(center,expName,project,sampleName);
-		run = new Run(center,runName,expName);
+		sample = new Sample(center,sampleName, s);
+		experiment = new Experiment(center,expName,project,sampleName, s);
+		run = new Run(center,runName,expName, s);
 	}
 	
 

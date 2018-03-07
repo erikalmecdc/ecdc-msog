@@ -10,12 +10,23 @@ public abstract class DatabaseEntity {
 	File xmlFile;
 	String type;
 	
-	DatabaseEntity(String c, String a) {
+	
+	public String TMP_PATH;
+	
+	
+	public void init() {
+		File tmpDir = new File(TMP_PATH);
+		tmpDir.mkdirs();
+	}
+	
+	DatabaseEntity(String c, String a, Submission s) {
 		title = a;
 		accession = "";
 		centerName=c;
 		alias=a;
-		
+		if (s!=null) {
+			TMP_PATH = s.getTmpPath();
+		}
 	}
 	
 	public void setAccession(String a) {
@@ -26,7 +37,7 @@ public abstract class DatabaseEntity {
 	}
 	
 	public void writeXml() {
-		xmlFile = new File(ENAUtils.TMP_PATH+type+"_"+alias+".xml");
+		xmlFile = new File(TMP_PATH+"/"+type+"_"+alias+".xml");
 		writeXml(xmlFile);
 	}
 	
@@ -46,7 +57,13 @@ public abstract class DatabaseEntity {
 		return alias;
 	}
 	
+	public void setTmpPath(String path) {
+		TMP_PATH = path;
+	}
 	
-	
+	public String getTmpPath() {
+		return TMP_PATH;
+	}
+
 	
 }

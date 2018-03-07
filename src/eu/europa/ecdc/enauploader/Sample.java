@@ -12,8 +12,8 @@ public class Sample extends DatabaseEntity {
 	
 	
 
-	Sample(String c, String a) {
-		super(c, a);
+	Sample(String c, String a, Submission s) {
+		super(c, a, s);
 		type = "SAMPLE";
 		attributes = new HashMap<String,String>();
 	}
@@ -23,7 +23,13 @@ public class Sample extends DatabaseEntity {
 	}
 	
 	public void setAttribute(String key, String value) {
-		attributes.put(key, value);
+		if (value==null || value.equals("") || value.equals("null")) {
+			
+		} else {
+			attributes.put(key, value);	
+		}
+		
+		
 	}
 	
 
