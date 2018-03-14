@@ -125,7 +125,7 @@ public class Run extends DatabaseEntity {
 
 	@Override
 	public String getSubmitRow() {
-		return "<ADD schema=\"run\" source=\""+xmlFile.toString()+"\"/>";
+		return "<ACTION>\n<ADD schema=\"run\" source=\""+xmlFile.toString()+"\"/>\n</ACTION>\n";
 	}
 
 }

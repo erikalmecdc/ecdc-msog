@@ -22,17 +22,29 @@ public class ENAUtils {
 
 	public static String getTaxid(String taxon) {
 
-		switch (taxon) {
+		String out = "";
+		
+		try {
+			String line;
+			BufferedReader br = new BufferedReader(new FileReader("taxids.tsv"));
 
-		case "Listeria monocytogenes":
-			return "1639";
-		case "Salmonella enterica":
-			return "28901";
-		case "Escherichia coli":
-			return "562";
-		default:
-			return "0";
+			while((line = br.readLine())!=null) {
+				String[] fields = line.split("\t");
+				String name = fields[0];
+				if (name.toLowerCase().equals(taxon.toLowerCase())) {
+					br.close();
+					return fields[1];
+				}
+			}
+			
+			br.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+		
+		return out;
+		
 	}
 
 	public static String[] readCsvHeader(File csvFile) {

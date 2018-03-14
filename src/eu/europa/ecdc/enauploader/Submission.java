@@ -137,9 +137,8 @@ public class Submission extends DatabaseEntity {
 					DatabaseEntity e = entries.get(k);
 					if (e.getType().equals(entryType)) {
 						e.writeXml();
-						bw2.write("<ACTION>\n");
+						
 						bw2.write(e.getSubmitRow());
-						bw2.write("</ACTION>\n");
 					}
 				}
 
@@ -281,7 +280,11 @@ public class Submission extends DatabaseEntity {
 			p.waitFor();
 		} catch (IOException e) {
 
-			e.printStackTrace();
+			if (logArea==null) {
+				System.out.println("CURL program could not be found, please check paths.txt and check that curl is in the specified location and runs under your operating system.");
+			} else {
+				logArea.append("CURL program could not be found, please check paths.txt and check that curl is in the specified location and runs under your operating system."+"\n");
+			}
 		} catch (InterruptedException e) {
 
 			e.printStackTrace();

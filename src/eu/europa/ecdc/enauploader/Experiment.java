@@ -90,7 +90,7 @@ public class Experiment extends DatabaseEntity {
 	
 	@Override
 	public String getSubmitRow() {
-		return "<ADD schema=\"experiment\" source=\""+xmlFile.toString()+"\"/>";
+		return "<ACTION>\n<ADD schema=\"experiment\" source=\""+xmlFile.toString()+"\"/>\n</ACTION>\n";
 	}
 
 }

@@ -20,7 +20,7 @@ import org.apache.commons.cli.ParseException;
 
 public class ENAuploaderMain {
 
-	private static String version="0.16";
+	private static String version="0.18";
 
 
 	// This is a command line version
@@ -37,11 +37,50 @@ public class ENAuploaderMain {
 		// yes/no whether files are already on FTP
 		//delimiter
 		//ENA checklist
+		
+		
+		String ftpHost = "webin.ebi.ac.uk";
+		
+		String curlPath = "curl.exe";
+		String tmpPath = ".";
+		String line;
+
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(new File("paths.txt")));
+			while ((line = br.readLine())!=null) {
+				if (!line.equals("")) {
+					String[] fields = line.split("=");
+					String key = fields[0];
+					String value = fields[1];
+					if (key.equals("CURL")) {
+						curlPath = value;
+						if (!(new File(curlPath)).exists()) {
+							System.out.println("Path to the curl program: "+curlPath+" is incorrect. Check paths.txt");
+							return;
+						}
+					} else if (key.equals("FTP")) {
+						ftpHost = value;
+					} else if (key.equals("TMP")) {
+						tmpPath = value;
+					}
+				}
+			}
+			br.close();
+		} catch (IOException e) {
+
+			e.printStackTrace();
+		}
+		
+		
+		
+		
+		
+		
 		CommandLine commandLine;
 	    Option option_center = Option.builder("C").longOpt("center").argName("center").hasArg().desc("Submitting center (MANDATORY)").build();
-	    Option option_proj = Option.builder("p").argName("project").argName("project").hasArg().desc("Project alias or accession. If the argument is an accession (PRJEB*****), data will be sudmitted to that project. If the argument is an alias, a new project will be created. (MANDATORY)").build();
-	    Option option_csv = Option.builder("c").longOpt("csv").argName("csv").hasArg().desc("CSV-infile. First four columns must be (in order): ID, File base name, Instrument, species. An output csv file will be created. Accessions will be written in the last five columns in this order: ID used for upload, Sample acc, Experiment acc, Run acc, uploaded files. These column heading must exist (MANDATORY)").build();
-	    Option option_data = Option.builder("d").longOpt("data-dir").argName("dir").hasArg().desc("Directory for data files (MANDATORY unless ftp option is set to yes)").build();
+	    Option option_proj = Option.builder("p").argName("project").argName("project").hasArg().desc("Project alias or accession. If the argument is an accession (PRJEB*****), data will be submitted to that project. If the argument is an alias, a new project will be created. (MANDATORY)").build();
+	    Option option_csv = Option.builder("c").longOpt("csv").argName("csv").hasArg().desc("CSV-infile. First four columns must be (in order): ID, File base name, Instrument, species. An output csv file will be created. Accessions will be written in the last five columns in this order: ID used for upload, Sample acc, Experiment acc, Run acc, uploaded files. These column heading must exist (MANDATORY unless only project submission/release is involved)").build();
+	    Option option_data = Option.builder("d").longOpt("data-dir").argName("dir").hasArg().desc("Directory for data files (MANDATORY unless ftp option is set to yes or if only study submission/release is involved)").build();
 	    Option option_login = Option.builder("l").longOpt("login").argName("login").hasArg().desc("Webin login (MANDATORY)").build();
 	    Option option_passwd = Option.builder().longOpt("pass").argName("passwd").hasArg().desc("Webin password (Will be promped for if not entered)").build();
 	    Option option_anon = Option.builder("a").longOpt("anonymize").argName("yes/no").hasArg().desc("Anonymize (yes/no) (Default: yes)").build();
@@ -50,6 +89,8 @@ public class ENAuploaderMain {
 	    Option option_delim = Option.builder().longOpt("delimiter").hasArg().desc("Delimiter for file, usually _ (Default: any delimiter)").build();
 	    Option option_checklist = Option.builder().longOpt("checklist").argName("checklist name").hasArg().desc("ENA checklist (Default: ERC000028)").build();
 	    Option option_out = Option.builder("o").longOpt("out").argName("outfile").hasArg().desc("Output csv file name. (Default: <filename>.out.csv)").build();
+	    Option option_hold = Option.builder("h").longOpt("hold").argName("yyyy-mm-dd").hasArg().desc("Hold study release until specified date. (only relevant with -p <alias> option.)").build();
+	    Option option_release = Option.builder("r").longOpt("release").argName("study accession").hasArg().desc("Release study with the specified accession immediately, then quit. (Requires only -l and -C)").build();    
 	    
 	    Options options = new Options();
 	    CommandLineParser parser = new DefaultParser();
@@ -66,6 +107,8 @@ public class ENAuploaderMain {
 	    options.addOption(option_delim);
 	    options.addOption(option_checklist);
 	    options.addOption(option_out);
+	    options.addOption(option_hold);
+	    options.addOption(option_release);
 	    
 	    String header1 = "Options, flags and arguments may be in any order";
 	    String footer1 = "ENA uploader version "+version;
@@ -84,6 +127,31 @@ public class ENAuploaderMain {
 	        	System.out.println("-C or --center option mandatory");
 		        return;
 	        }
+	        
+	        String login;
+	        if (commandLine.hasOption("l")) {
+	            login = commandLine.getOptionValue("l");
+	        } else {
+	        	System.out.println("-l or --logjn option mandatory");
+		        return;
+	        }
+	        
+	        String passwd;
+	        if (commandLine.hasOption("pass")) {
+	            passwd = commandLine.getOptionValue("pass");
+	        } else {
+	        	System.out.print("Enter Webin password for " + login+": ");
+	        	passwd = new String(System.console().readPassword());
+	        }
+	        
+	        String release;
+	        if (commandLine.hasOption("r")) {
+	            release = commandLine.getOptionValue("r");
+	            releaseStudy(center,release,curlPath,tmpPath,login,passwd);
+	            return;
+	        } else {
+	        	
+	        }
 	       
 	        String project;
 	        if (commandLine.hasOption("p")) {
@@ -97,6 +165,13 @@ public class ENAuploaderMain {
 	        	delimiter = commandLine.getOptionValue("delimiter");
 	        } else {
 	        	delimiter = "";
+	        }
+	        
+	        String holdDate = "";
+	        if (commandLine.hasOption("h")) {
+	        	holdDate = commandLine.getOptionValue("h");
+	        } else {
+	        	holdDate = "";
 	        }
 
 	        String checklist;
@@ -121,7 +196,7 @@ public class ENAuploaderMain {
 	        if (commandLine.hasOption("o")) {
 	        	outCsv = new File(commandLine.getOptionValue("o"));
 	        } else {
-	        	if (!csv) {
+	        	if (csv) {
 	        		outCsv = new File(csvFile.toString()+".out.csv");
 	        	} else {
 	        		System.out.println("Output CSV is required if there is no input CSV.");
@@ -132,21 +207,7 @@ public class ENAuploaderMain {
 	        }
 	        
 
-	        String login;
-	        if (commandLine.hasOption("l")) {
-	            login = commandLine.getOptionValue("l");
-	        } else {
-	        	System.out.println("-l or --logjn option mandatory");
-		        return;
-	        }
-	        
-	        String passwd;
-	        if (commandLine.hasOption("pass")) {
-	            passwd = commandLine.getOptionValue("pass");
-	        } else {
-	        	System.out.print("Enter Webin password for " + login+": ");
-	        	passwd = new String(System.console().readPassword());
-	        }
+	       
 	        
 	        boolean anon=true;
 	        if (commandLine.hasOption("a")) {
@@ -199,37 +260,6 @@ public class ENAuploaderMain {
 	        }
 	        
 
-			String ftpHost = "webin.ebi.ac.uk";
-			
-			String curlPath = "curl.exe";
-			String tmpPath = ".";
-			String line;
-
-			try {
-				BufferedReader br = new BufferedReader(new FileReader(new File("paths.txt")));
-				while ((line = br.readLine())!=null) {
-					if (!line.equals("")) {
-						String[] fields = line.split("=");
-						String key = fields[0];
-						String value = fields[1];
-						if (key.equals("CURL")) {
-							curlPath = value;
-							if (!(new File(curlPath)).exists()) {
-								System.out.println("Path to the curl program: "+curlPath+" is incorrect. Check paths.txt");
-								return;
-							}
-						} else if (key.equals("FTP")) {
-							ftpHost = value;
-						} else if (key.equals("TMP")) {
-							tmpPath = value;
-						}
-					}
-				}
-				br.close();
-			} catch (IOException e) {
-
-				e.printStackTrace();
-			}
 			
 			
 			
@@ -242,7 +272,7 @@ public class ENAuploaderMain {
 				s.setTmpPath(tmpPath);
 
 				Project p = new Project(center,project,s);
-
+				p.setReleaseDate(holdDate);
 				
 				s.setLogin(login,passwd);
 				s.addEntry(p);
@@ -301,6 +331,27 @@ public class ENAuploaderMain {
 	}
 	
 	
+	private static void releaseStudy(String center, String acc, String curlPath, String tmpPath, String login, String passwd) {
+		String randomUUIDString = UUID.randomUUID().toString();
+		Submission s = new Submission(center, randomUUIDString);
+
+		s.setCurlPath(curlPath);
+		s.setTmpPath(tmpPath);
+
+		Project p = new Project(center,"",s);
+		p.setAccession(acc);
+		p.setReleaseAction(true);
+		
+		s.setLogin(login,passwd);
+		s.addEntry(p);
+		s.uploadFiles();
+		s.submit();
+		
+	
+		
+	}
+
+
 	//Example code for use of the library, rename to main to run it
 	public static void main2(String[] args) {
 		
