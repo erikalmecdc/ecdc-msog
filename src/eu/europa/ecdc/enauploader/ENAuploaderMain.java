@@ -87,7 +87,7 @@ public class ENAuploaderMain {
 	    Option option_prod = Option.builder().longOpt("production").argName("yes/no").hasArg().desc("Use production server (yes/no) (Default: no)").build();
 	    Option option_ftp = Option.builder().longOpt("ftp").argName("yes/no").hasArg().desc("Files already on FTP? (yes/no) (Default: no)").build();
 	    Option option_delim = Option.builder().longOpt("delimiter").hasArg().desc("Delimiter for file, usually _ (Default: any delimiter)").build();
-	    Option option_checklist = Option.builder().longOpt("checklist").argName("checklist name").hasArg().desc("ENA checklist (Default: ERC000028)").build();
+	    Option option_checklist = Option.builder().longOpt("checklist").argName("checklist name").hasArg().desc("ENA checklist (Default: ERC000044)").build();
 	    Option option_out = Option.builder("o").longOpt("out").argName("outfile").hasArg().desc("Output csv file name. (Default: <filename>.out.csv)").build();
 	    Option option_hold = Option.builder("h").longOpt("hold").argName("yyyy-mm-dd").hasArg().desc("Hold study release until specified date. (only relevant with -p <alias> option.)").build();
 	    Option option_release = Option.builder("r").longOpt("release").argName("study accession").hasArg().desc("Release study with the specified accession immediately, then quit. (Requires only -l and -C)").build();    
@@ -178,7 +178,7 @@ public class ENAuploaderMain {
 	        if (commandLine.hasOption("checklist")) {
 	        	checklist = commandLine.getOptionValue("checklist");
 	        } else {
-	        	checklist = "ERC000028";
+	        	checklist = "ERC000044";
 	        	System.out.println("No checklist, defaulting to " + checklist);
 	        }
 	        

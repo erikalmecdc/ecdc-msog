@@ -55,23 +55,25 @@ public class Sample extends DatabaseEntity {
 			bw.write("</SAMPLE_ATTRIBUTE>\n");
 			
 			bw.write("<SAMPLE_ATTRIBUTE>\n");
-			bw.write("<TAG>strain</TAG>\n");
+			bw.write("<TAG>isolate</TAG>\n");
 			bw.write("<VALUE>"+alias+"</VALUE>\n");
 			bw.write("</SAMPLE_ATTRIBUTE>\n");
 			
 			//This is the GMI checklist for metadata, might need to change this.
-			bw.write("<SAMPLE_ATTRIBUTE>\n");
+			/*bw.write("<SAMPLE_ATTRIBUTE>\n");
 			bw.write("<TAG>ENA_CHECKLIST</TAG>\n");
 			bw.write("<VALUE>ERC000028</VALUE>\n");
-			bw.write("</SAMPLE_ATTRIBUTE>\n");
+			bw.write("</SAMPLE_ATTRIBUTE>\n");*/
 			
 			
 			for (String attribute : attributes.keySet()) {
 				String value = attributes.get(attribute);
-				bw.write("<SAMPLE_ATTRIBUTE>\n");
-				bw.write("<TAG>"+attribute+"</TAG>\n");
-				bw.write("<VALUE>"+value+"</VALUE>\n");
-				bw.write("</SAMPLE_ATTRIBUTE>\n");
+				if (value!=null && !value.equals("") && !value.equals("null")) {
+					bw.write("<SAMPLE_ATTRIBUTE>\n");
+					bw.write("<TAG>"+attribute+"</TAG>\n");
+					bw.write("<VALUE>"+value+"</VALUE>\n");
+					bw.write("</SAMPLE_ATTRIBUTE>\n");
+				}
 			}
 			
 			bw.write("</SAMPLE_ATTRIBUTES>\n");
