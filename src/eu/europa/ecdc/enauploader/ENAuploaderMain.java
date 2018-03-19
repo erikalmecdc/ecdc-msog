@@ -20,7 +20,7 @@ import org.apache.commons.cli.ParseException;
 
 public class ENAuploaderMain {
 
-	private static String version="0.18";
+	private static String version="0.20";
 
 
 	// This is a command line version
