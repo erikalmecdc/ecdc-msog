@@ -51,15 +51,18 @@ public class Submission extends DatabaseEntity {
 	public void setlogArea(JTextArea logger) {
 		logArea = logger;
 	}
+	
 
 	public void useProductionServer(boolean p) {
-		if (p = true) {
+		if (p) {
 			// production API
 			API_URL = "https://www.ebi.ac.uk/ena/submit/drop-box/submit/?auth=ENA";
+			System.out.println(API_URL);
 		} else {
 			// test API
 			API_URL = "https://www-test.ebi.ac.uk/ena/submit/drop-box/submit/?auth=ENA";
 		}
+		System.out.println(API_URL);
 	}
 
 	public void setLogin(String l, String pwd) {
@@ -156,18 +159,33 @@ public class Submission extends DatabaseEntity {
 
 	}
 
-
 	public boolean submit() {
+		return submit(null);
+	}
+
+	public boolean submit(EcdcJob sourceJob) {
 
 
 
 		if (!uploaded) {
 			System.out.println("DATA FILES HAVE NOT SUCCESSFULLY BEEN UPLOADED!");
+			if (sourceJob!=null) {
+				sourceJob.log("Data files have not been successfully uploaded to ENA, aborting ENA submission");
+			}
 			return false;
 		}
+		if (sourceJob!=null) {
+			sourceJob.log("Initializing ENA submission");
+		}
 		init();
+		if (sourceJob!=null) {
+			sourceJob.log("Writing ENA xml files");
+		}
 		writeXml();
-		curlFiles();
+		if (sourceJob!=null) {
+			sourceJob.log("Uploading ENA xml files");
+		}
+		curlFiles(sourceJob);
 		return true;
 
 	}
@@ -206,14 +224,16 @@ public class Submission extends DatabaseEntity {
 		}
 
 	}
+	
 
-	private void curlFiles() {
+	private void curlFiles(EcdcJob sourceJob) {
 
 		if (logArea==null) {
 			System.out.println("Submitting XML files...");
 		} else {
 			logArea.append("Submitting XML files..."+"\n");
 		}
+		
 
 		ArrayList<String> commands = new ArrayList<String>();
 		commands.add(CURL_PATH);
@@ -233,12 +253,32 @@ public class Submission extends DatabaseEntity {
 
 		}
 
+		
+		
 		commands.add("\""+API_URL+"%20"+LOGIN+"%20"+PASSWORD+"\"");
 
+		
 		
 		ProcessBuilder pb = new ProcessBuilder(commands);
 		pb.redirectErrorStream(true);
 
+		for (String c : commands) {
+			if (logArea==null) {
+				System.out.print(c+" ");
+			} else {
+				logArea.append(c+" ");
+			}
+			if (sourceJob!=null) {
+				sourceJob.log(c);
+			}
+		}
+		if (logArea==null) {
+			System.out.println("");
+		} else {
+			logArea.append("\n");
+		}
+		
+		
 		Process p;
 		try {
 			p = pb.start();
@@ -252,6 +292,9 @@ public class Submission extends DatabaseEntity {
 					System.out.println(line);
 				} else {
 					logArea.append(line+"\n");
+				}
+				if (sourceJob!=null) {
+					sourceJob.log(line);
 				}
 				if (line.matches(".*accession=.*")) {
 					Pattern aliasPat = Pattern.compile("alias=\"([^\"]+)\"");
@@ -284,6 +327,9 @@ public class Submission extends DatabaseEntity {
 				System.out.println("CURL program could not be found, please check paths.txt and check that curl is in the specified location and runs under your operating system.");
 			} else {
 				logArea.append("CURL program could not be found, please check paths.txt and check that curl is in the specified location and runs under your operating system."+"\n");
+			}
+			if (sourceJob!=null) {
+				sourceJob.log("CURL program could not be found, please check CURL path in upload config and check that curl is in the specified location and runs under your operating system.");
 			}
 		} catch (InterruptedException e) {
 

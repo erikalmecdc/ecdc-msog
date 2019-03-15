@@ -1,0 +1,16 @@
+RecordId
+SampleId
+DateOfSampling
+DateOfReceiptSourceLab
+DateOfReceiptReferenceLab
+Gender=M,F,UNK
+Age
+AgeMonth
+SampleOrigin
+Specimen
+PlaceOfResidence
+Imported=Y,N,UNK
+ProbableCountryOfInfection
+Serotype
+WgsProtocol=MISEQ_2X300,MISEQ_2x250,MISEQ_2X150,NEXTSEQ_2X150,HISEQ_2X100,MINISEQ_2X150,IONTORRENT
+WgsAssembler=SPADES,VELVET,MAP_TO_LOCI1

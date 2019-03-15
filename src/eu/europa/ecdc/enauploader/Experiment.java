@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+// This class represents an ENA Experiment object
 public class Experiment extends DatabaseEntity {
 
 	private String studyAccession;
@@ -19,7 +20,6 @@ public class Experiment extends DatabaseEntity {
 		
 		pairedDistance = "500";
 		pairedDistanceSdev = "200.0";
-		
 		
 		type = "EXPERIMENT";
 		studyAccession = studyAcc;
@@ -54,7 +54,7 @@ public class Experiment extends DatabaseEntity {
 			bw.write("<LIBRARY_SOURCE>GENOMIC</LIBRARY_SOURCE>\n");
 			bw.write("<LIBRARY_SELECTION>RANDOM</LIBRARY_SELECTION>\n");
 			bw.write("<LIBRARY_LAYOUT>\n");
-			if (instrument.toLowerCase().matches(".*illumina.*")) {
+			if (instrument.toLowerCase().matches(".*illumina.*") || instrument.toLowerCase().matches(".*nextseq.*")) {
 				bw.write("<PAIRED NOMINAL_LENGTH=\""+pairedDistance+"\" NOMINAL_SDEV=\""+pairedDistanceSdev+"\"/>\n");
 			} else {
 				bw.write("<SINGLE/>\n");

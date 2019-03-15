@@ -1,0 +1,8 @@
+serovar
+collected_by
+collection_date
+country
+host_associated
+specific_host
+host_disease_status
+test

@@ -1,0 +1,4 @@
+collection_date
+collected_by
+geographic location (country and/or sea)
+host scientific name

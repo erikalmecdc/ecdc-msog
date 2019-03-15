@@ -20,7 +20,7 @@ import org.apache.commons.cli.ParseException;
 
 public class ENAuploaderMain {
 
-	private static String version="0.20";
+	private static String version="0.22";
 
 
 	// This is a command line version
@@ -33,7 +33,7 @@ public class ENAuploaderMain {
 		// Login (Webin-NNNNN)
 		// Password
 		// yes/no whether to use the production database at EBI
-		// yes/no whether to anonymize
+		// yes/no whether to anonymizehttp://marketplace.eclipse.org/marketplace-client-intro?mpc_install=156
 		// yes/no whether files are already on FTP
 		//delimiter
 		//ENA checklist
@@ -144,10 +144,24 @@ public class ENAuploaderMain {
 	        	passwd = new String(System.console().readPassword());
 	        }
 	        
+	        boolean prod=false;
+	        if (commandLine.hasOption("production")) {
+	            String anonStr = commandLine.getOptionValue("production");
+	            if (anonStr.equals("yes")) {
+	            	prod = true;
+	            } else if (anonStr.equals("no")) {
+	            	prod = false;
+	            } else {
+	            	System.out.println("--production must be yes or no.");
+			        return;
+	            }
+	        } 
+	        
+	        
 	        String release;
 	        if (commandLine.hasOption("r")) {
 	            release = commandLine.getOptionValue("r");
-	            releaseStudy(center,release,curlPath,tmpPath,login,passwd);
+	            releaseStudy(center,release,curlPath,tmpPath,login,passwd,prod);
 	            return;
 	        } else {
 	        	
@@ -221,18 +235,7 @@ public class ENAuploaderMain {
 			        return;
 	            }
 	        } 
-	        boolean prod=false;
-	        if (commandLine.hasOption("production")) {
-	            String anonStr = commandLine.getOptionValue("production");
-	            if (anonStr.equals("yes")) {
-	            	prod = true;
-	            } else if (anonStr.equals("no")) {
-	            	prod = false;
-	            } else {
-	            	System.out.println("--production must be yes or no.");
-			        return;
-	            }
-	        } 
+	      
 	        boolean ftpExist=false;
 	        if (commandLine.hasOption("ftp")) {
 	            String anonStr = commandLine.getOptionValue("ftp");
@@ -270,6 +273,11 @@ public class ENAuploaderMain {
 
 				s.setCurlPath(curlPath);
 				s.setTmpPath(tmpPath);
+				if (prod) {
+					s.useProductionServer(true);
+				} else {
+					s.useProductionServer(false);
+				}
 
 				Project p = new Project(center,project,s);
 				p.setReleaseDate(holdDate);
@@ -302,7 +310,7 @@ public class ENAuploaderMain {
 				String[] header = ENAUtils.readCsvHeader(csvFile);
 				CsvOutputHandler outHandler = new CsvOutputHandler(csvFile,outCsv,project);
 				
-				SubmissionWorker worker = new SubmissionWorker(center, project, data, header, dataDir,login,passwd, prod, anon, ftpExist, delimiter, checklist, null, tmpPath, curlPath, ftpHost, outHandler);
+				SubmissionWorker worker = new SubmissionWorker(center, project, data, header, dataDir,login,passwd, prod, anon, ftpExist, delimiter, checklist, null, tmpPath, curlPath, ftpHost, outHandler, null,"","","", false, true, false, null);
 				worker.doInBackground();
 			}
 	        
@@ -331,13 +339,16 @@ public class ENAuploaderMain {
 	}
 	
 	
-	private static void releaseStudy(String center, String acc, String curlPath, String tmpPath, String login, String passwd) {
+	private static void releaseStudy(String center, String acc, String curlPath, String tmpPath, String login, String passwd, boolean prod) {
 		String randomUUIDString = UUID.randomUUID().toString();
 		Submission s = new Submission(center, randomUUIDString);
 
 		s.setCurlPath(curlPath);
 		s.setTmpPath(tmpPath);
-
+		if (prod) {
+			s.useProductionServer(true);
+		}
+		
 		Project p = new Project(center,"",s);
 		p.setAccession(acc);
 		p.setReleaseAction(true);

@@ -1,0 +1,3 @@
+CURL=T:/Epidemiological Methods/MolecularSurveillance/Software/curl.exe
+TMP=C:/ENAtmp
+FTP=webin.ebi.ac.uk

@@ -1,0 +1,12 @@
+DateUsedForStatistics;collection_date
+ReportingCountry;geographic location (country and/or sea)
+Gender;
+Age;
+Imported;
+ProbableCountryOfInfection;
+Serotype;
+Specimen;
+SampleOrigin;
+DateOfSampling;
+DateOfReceiptReferenceLab;
+WgsAssembler;

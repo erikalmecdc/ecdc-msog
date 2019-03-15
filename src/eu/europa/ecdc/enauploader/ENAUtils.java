@@ -6,20 +6,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
-import it.sauronsoftware.ftp4j.FTPAbortedException;
-import it.sauronsoftware.ftp4j.FTPClient;
-import it.sauronsoftware.ftp4j.FTPDataTransferException;
-import it.sauronsoftware.ftp4j.FTPException;
-import it.sauronsoftware.ftp4j.FTPIllegalReplyException;
-
+// Utils
 public class ENAUtils {
 
-
-
-
-
+	// This method looks up and returns a taxid from a tab separated table
 	public static String getTaxid(String taxon) {
 
 		String out = "";
@@ -47,6 +38,7 @@ public class ENAUtils {
 		
 	}
 
+	// This method reads the header of a csv file
 	public static String[] readCsvHeader(File csvFile) {
 		String line;
 
@@ -64,8 +56,8 @@ public class ENAUtils {
 		return null;
 	}
 
+	// This method reads a csv file
 	public static String[][] readCsv(File csvFile, boolean header) {
-		
 		
 		String line;
 		ArrayList<String[]> rowData = new ArrayList<String[]>();
@@ -112,6 +104,7 @@ public class ENAUtils {
 
 	}
 
+	// This methods writes a csv file
 	public static void writeCsv(File file, String title, String[][] data, String[] header) {
 		BufferedWriter bw;
 		try {
