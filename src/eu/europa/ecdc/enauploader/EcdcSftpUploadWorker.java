@@ -97,7 +97,6 @@ public class EcdcSftpUploadWorker extends EcdcJob {
 			int row = Integer.parseInt(data[i][0]);
 			String recordId = data[i][1];  	
 			String fileStr = data[i][2];  
-			String tessyIdStr = data[i][3];
 			String wgsProtocol = data[i][4];
 			String ui = data[i][5];
 
@@ -105,8 +104,8 @@ public class EcdcSftpUploadWorker extends EcdcJob {
 			setProgress(10+i*step);
 
 			// Check that entry has all neccessary fields
-			if (wgsProtocol==null || wgsProtocol.equals("") || recordId==null || recordId.equals("") || fileStr==null || fileStr.equals("") || tessyIdStr==null || tessyIdStr.equals("")) {
-				log("Error, RecordId, Wgs protocol and raw data files must be filled in, and the isolate must be submitted to TESSy first.");
+			if (wgsProtocol==null || wgsProtocol.equals("") || recordId==null || recordId.equals("") || fileStr==null || fileStr.equals("")) {
+				log("Error, RecordId, Wgs protocol and raw data files must be filled in.");
 				fail++;
 				continue ISOLATE;
 			}
@@ -170,7 +169,7 @@ public class EcdcSftpUploadWorker extends EcdcJob {
 			
 			// Create a MD5 digest of concatenated data provider and TESSy GUID
 			// This is used to anonymize the file names for the SFTP 
-			String baseName = org.apache.commons.codec.digest.DigestUtils.md5Hex(cfg.getTessyProvider()+"_"+recordId);
+			String baseName = org.apache.commons.codec.digest.DigestUtils.md5Hex(cfg.getTessyProvider().toUpperCase()+"_"+recordId);
 			String xmlName = baseName+".xml";
 			String xmlFile = tmpPath+"/"+xmlName;
 

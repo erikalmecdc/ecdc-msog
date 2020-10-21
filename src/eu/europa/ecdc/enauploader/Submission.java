@@ -1,22 +1,41 @@
 package eu.europa.ecdc.enauploader;
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.InetAddress;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.security.cert.X509Certificate;
 import javax.swing.JTextArea;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPSClient;
+import org.apache.commons.net.util.TrustManagerUtils;
 
 import it.sauronsoftware.ftp4j.FTPClient;
+import it.sauronsoftware.ftp4j.FTPConnector;
+import it.sauronsoftware.ftp4j.connectors.DirectConnector;
 
 public class Submission extends DatabaseEntity {
 
@@ -51,7 +70,7 @@ public class Submission extends DatabaseEntity {
 	public void setlogArea(JTextArea logger) {
 		logArea = logger;
 	}
-	
+
 
 	public void useProductionServer(boolean p) {
 		if (p) {
@@ -80,14 +99,141 @@ public class Submission extends DatabaseEntity {
 		entries.put(e.run.getAlias(),e.run);
 	}
 
-	public boolean upload(ArrayList<File> files) {
 
-		
+	public boolean upload(ArrayList<File> files, EcdcJob job) {
+		FTPSClient ftpClient = new FTPSClient("TLS", false);
+
 
 		try {
+			TrustManager trustManager = TrustManagerUtils.getAcceptAllTrustManager();
+			ftpClient.setTrustManager(trustManager);
+			
+			ftpClient.setBufferSize(1024 * 1024);
+			ftpClient.setConnectTimeout(100000);
+			if (job== null) {
+				System.out.println("Connecting to ENA using FTPS");
+			} else {
+				job.log("Connecting to ENA using FTPS");
+			}
+			ftpClient.connect(InetAddress.getByName(FTP_HOST), 21);
+			ftpClient.setSoTimeout(100000);
+
+
+			if (ftpClient.login(LOGIN, PASSWORD)) {
+				if (job== null) {
+					System.out.println("Login successful");
+				} else {
+					job.log("Login successful");
+				}
+				ftpClient.changeWorkingDirectory("/");
+
+				ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+				ftpClient.enterLocalPassiveMode();
+				
+				for (File f : files) {
+					
+					boolean success = false;
+					while (!success) {
+						if (job== null) {
+							System.out.println("Uploading " + f.toString());
+						} else {
+							job.log("Uploading " + f.toString());
+						}
+						InputStream input = new FileInputStream(f);
+						success = ftpClient.storeFile(f.getName(), input);
+						if (!success) {
+							if (job== null) {
+								System.out.println("Upload of " + f.toString() + " failed!");
+							} else {
+								job.log("Upload of " + f.toString() + " failed!");
+							}
+						}
+					}
+					
+				}
+			} else {
+				if (job== null) {
+					System.out.println("Login failed, check your credentials for ENA");
+				} else {
+					job.log("Login failed, check your credentials for ENA");
+				}
+				return false;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			if (job== null) {
+				System.out.println("Upload failed: " + e.toString());
+			} else {
+				job.log("Upload failed: " + e.toString());
+			}
+			return false;
+		} finally {
+			try {
+				if (job== null) {
+					System.out.println("Disconnecting from ENA");
+				} else {
+					job.log("Disconnecting from ENA");
+				}
+				ftpClient.disconnect();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		return true;
+	}
+
+
+	public boolean uploadOld(ArrayList<File> files) {
+
+
+		System.out.println("Connecting to ENA");
+		try {
+			TrustManager[] trustManager = new TrustManager[] { new X509TrustManager() {
+				@Override
+				public void checkClientTrusted(java.security.cert.X509Certificate[] arg0, String arg1)
+						throws CertificateException {
+					// TODO Auto-generated method stub
+
+				}
+				@Override
+				public void checkServerTrusted(java.security.cert.X509Certificate[] arg0, String arg1)
+						throws CertificateException {
+					// TODO Auto-generated method stub
+
+				}
+				@Override
+				public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+					// TODO Auto-generated method stub
+					return null;
+				}
+			} };
+			SSLContext sslContext = null;
+			try {
+				sslContext = SSLContext.getInstance("SSL");
+				sslContext.init(null, trustManager, new SecureRandom());
+			} catch (NoSuchAlgorithmException e) {
+				e.printStackTrace();
+			} catch (KeyManagementException e) {
+				e.printStackTrace();
+			}
+			SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 			FTPClient client = new FTPClient();
-			client.connect(FTP_HOST);
+			client.setSSLSocketFactory(sslSocketFactory);
+			client.setSecurity(FTPClient.SECURITY_FTPES); // or client.setSecurity(FTPClient.SECURITY_FTPES);
+			FTPConnector connector = new DirectConnector();
+			connector.setConnectionTimeout(300);
+			connector.setReadTimeout(300);
+			connector.setCloseTimeout(300);
+			client.setConnector(connector);
+
+			client.setPassive(true);
+			System.setProperty("ftp4j.activeDataTransfer.acceptTimeout", "0");
+			client.connect(FTP_HOST, 21);
+			System.out.println("Connected to ENA");
 			client.login(LOGIN, PASSWORD);
+			System.out.println("Logged in");
 			for (File f : files) {
 				boolean success = false;
 				while (!success) {
@@ -140,7 +286,7 @@ public class Submission extends DatabaseEntity {
 					DatabaseEntity e = entries.get(k);
 					if (e.getType().equals(entryType)) {
 						e.writeXml();
-						
+
 						bw2.write(e.getSubmitRow());
 					}
 				}
@@ -190,9 +336,11 @@ public class Submission extends DatabaseEntity {
 
 	}
 
-
-
 	public void uploadFiles() {
+		uploadFiles(null);
+	}
+
+	public void uploadFiles(EcdcJob job) {
 		if (ftpExist) {
 			if (logArea== null) {
 				System.out.println("Files already exist on FTP, skipping upload step.");
@@ -202,7 +350,7 @@ public class Submission extends DatabaseEntity {
 			uploaded = true;	
 			return;
 		}
-		
+
 		boolean globalSuccess = true;
 		for (String k: entries.keySet()) {
 			DatabaseEntity e = entries.get(k);
@@ -210,7 +358,7 @@ public class Submission extends DatabaseEntity {
 				ArrayList<File> files = new ArrayList<File>();
 				ArrayList<File> localFiles = ((Run)e).getFiles();
 				files.addAll(localFiles);
-				boolean success = upload(files);
+				boolean success = upload(files, job);
 				if (!success) {
 					globalSuccess = false;
 				}
@@ -224,7 +372,7 @@ public class Submission extends DatabaseEntity {
 		}
 
 	}
-	
+
 
 	private void curlFiles(EcdcJob sourceJob) {
 
@@ -233,7 +381,7 @@ public class Submission extends DatabaseEntity {
 		} else {
 			logArea.append("Submitting XML files..."+"\n");
 		}
-		
+
 
 		ArrayList<String> commands = new ArrayList<String>();
 		commands.add(CURL_PATH);
@@ -253,12 +401,12 @@ public class Submission extends DatabaseEntity {
 
 		}
 
-		
-		
+
+
 		commands.add("\""+API_URL+"%20"+LOGIN+"%20"+PASSWORD+"\"");
 
-		
-		
+
+
 		ProcessBuilder pb = new ProcessBuilder(commands);
 		pb.redirectErrorStream(true);
 
@@ -277,8 +425,8 @@ public class Submission extends DatabaseEntity {
 		} else {
 			logArea.append("\n");
 		}
-		
-		
+
+
 		Process p;
 		try {
 			p = pb.start();
@@ -363,7 +511,7 @@ public class Submission extends DatabaseEntity {
 
 	public void setFtpExist(boolean ftpE) {
 		ftpExist = ftpE;
-		
+
 	}
 
 }

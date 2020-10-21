@@ -179,6 +179,7 @@ public class EnaSubmissionWorker extends EcdcJob {
 
 			// Set ENA checklist
 			wrap.sample.setAttribute("checklist",checklist);
+			wrap.sample.setAttribute("collection date",year);
 			
 			
 			// Iretare through the read files
@@ -229,7 +230,7 @@ public class EnaSubmissionWorker extends EcdcJob {
 			
 			// Upload the read files
 			log("Uploading files");
-			s.uploadFiles();
+			s.uploadFiles(this);
 
 			setStatus("Submitting XML for "+name);
 			setProgress(15+increment*i+increment);

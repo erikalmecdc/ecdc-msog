@@ -437,6 +437,7 @@ public class UploadConfigGUI extends JFrame implements ActionListener {
 		nameformatField = new JComboBox<String>();
 		nameformatField.addItem("<sample>_*.fastq.gz");
 		nameformatField.addItem("<sample>.*.fastq.gz");
+		nameformatField.addItem("<sample>.*.fastq");
 		nameformatField.setPreferredSize(new Dimension(240,20));
 		JPanel nameformatPanel = new JPanel ();
 		nameformatPanel.add(nameformatLabel);

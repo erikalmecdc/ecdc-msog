@@ -86,7 +86,7 @@ public class EcdcUploaderGUI extends JFrame implements ActionListener {
 	private static final String TESSY_APPROVED_COLUMN = "TESSy last approved";
 	private static final String SFTP_COLUMN = "ECDC SFTP uploaded";
 	
-	private static final String VERSION = "1.0.3";
+	private static final String VERSION = "1.0.8";
 	
 	
 	
@@ -294,7 +294,7 @@ public class EcdcUploaderGUI extends JFrame implements ActionListener {
 		uploadMenu.addSeparator();
 		uploadMenu.addSeparator();
 
-		JMenuItem sftpUploadItem = new JMenuItem("SFTP - Upload sequences (requires TESSy records)");
+		JMenuItem sftpUploadItem = new JMenuItem("SFTP - Upload sequences");
 		sftpUploadItem.addActionListener(this);
 		sftpUploadItem.setActionCommand("uploadFtpSelected");
 		uploadMenu.add(sftpUploadItem);

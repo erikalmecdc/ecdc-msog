@@ -78,17 +78,53 @@ public class EcdcFullUploadWorker extends EcdcJob {
 			
 		}
 		
+		
+		setStatus("Submitting to ECDC SFTP");
+		setProgress(33);
+		log("Launching SFTP UPLOAD job");
+		
+		// Create and run a job for submitting to SFTP
+		EcdcSftpUploadWorker sftpWorker = gui.getSftpWorker(name, selectedRows);
+		if (sftpWorker!=null) {
+			sftpWorker.execute();
+		} else {
+			log("GUI returned null sftpWorker, likely an error in the isolate table");
+			return null;
+		}
+		
+		// Wait for the job to finish
+		boolean done=false;
+		while (!done) {
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
+			}
+			
+			// Check if this job was interrupted
+			if (sftpWorker.isStopped()) {
+				log("Job interrupted, exiting");
+				setStatus("Error, job interrupted");
+				setProgress(45);
+				return null;
+			}
+			if (sftpWorker.isDone()) {
+				done=true;
+			}
+		}
+		
+		
+		
 		// This section is for submitting to TESSy
 		if (cfg.isSubmitTessy()) {
 			// Check if this job was interrupted
 			if (isStopped()) {
 				log("Job interrupted, exiting");
 				setStatus("Error, job interrupted");
-				setProgress(30);
+				setProgress(47);
 				return null;
 			}
 			setStatus("Testing at TESSy");
-			setProgress(30);
+			setProgress(50);
 			log("TESSy test job");
 			
 			// Create and run a job for testing at TESSy
@@ -97,13 +133,13 @@ public class EcdcFullUploadWorker extends EcdcJob {
 				tessyTestWorker.execute();
 			} else {
 				setStatus("Error, no valied entries selected");
-				setProgress(35);
+				setProgress(55);
 				log("GUI returned null tessyTestWorker, likely an error in the isolate table");
 				return null;
 			}
 			
 			// Wait for job to finish
-			boolean done=false;
+			done=false;
 			while (!done) {
 				try {
 					Thread.sleep(5000);
@@ -114,7 +150,7 @@ public class EcdcFullUploadWorker extends EcdcJob {
 				if (tessyTestWorker.isStopped()) {
 					log("Job interrupted, exiting");
 					setStatus("Error, job interrupted");
-					setProgress(35);
+					setProgress(55);
 					return null;
 				}
 				if (tessyTestWorker.isDone()) {
@@ -128,7 +164,7 @@ public class EcdcFullUploadWorker extends EcdcJob {
 			if (!batch.passedValidation()) {
 				log("Batch did not pass validation, quitting");
 				setStatus("Error, the batch did not pass TESSy validation");
-				setProgress(35);
+				setProgress(55);
 				return null;
 			}
 			
@@ -136,13 +172,13 @@ public class EcdcFullUploadWorker extends EcdcJob {
 			if (isStopped()) {
 				log("Job interrupted, exiting");
 				setStatus("Error, job interrupted");
-				setProgress(40);
+				setProgress(55);
 				return null;
 			}
 			
 			// Create and run a job for uploading to TESSy
 			setStatus("Uploading to TESSy");
-			setProgress(40);
+			setProgress(65);
 			log("TESSy upload job");
 			EcdcTessyUploadWorker tessyUploadWorker = gui.getEcdcTessyUploadWorker(batchId);
 			if (tessyUploadWorker!=null) {
@@ -165,7 +201,7 @@ public class EcdcFullUploadWorker extends EcdcJob {
 				if (tessyUploadWorker.isStopped()) {
 					log("Job interrupted, exiting");
 					setStatus("Error, job interrupted");
-					setProgress(45);
+					setProgress(67);
 					return null;
 				}
 				if (tessyUploadWorker.isDone()) {
@@ -179,7 +215,7 @@ public class EcdcFullUploadWorker extends EcdcJob {
 			if (!batch.passedValidation()) {
 				log("Batch did not pass validation after Upload, quitting");
 				setStatus("Error, the batch did not pass TESSy validation");
-				setProgress(45);
+				setProgress(67);
 				return null;
 			}
 			
@@ -188,11 +224,11 @@ public class EcdcFullUploadWorker extends EcdcJob {
 			if (isStopped()) {
 				log("Job interrupted, exiting");
 				setStatus("Error, job interrupted");
-				setProgress(60);
+				setProgress(67);
 				return null;
 			}
 			setStatus("Approving in TESSy");
-			setProgress(60);
+			setProgress(75);
 			log("TESSy approve job");
 			EcdcTessyApprovalWorker tessyApprovalWorker = gui.getEcdcTessyApprovalWorker(batchId);
 			if (tessyApprovalWorker!=null) {
@@ -220,7 +256,7 @@ public class EcdcFullUploadWorker extends EcdcJob {
 			if (!batch.getState().equals("APPROVED")) {
 				log("Batch Approval failed, quitting");
 				setStatus("Error, batch approval failed");
-				setProgress(65);
+				setProgress(77);
 				return null;
 			}
 			
@@ -234,42 +270,11 @@ public class EcdcFullUploadWorker extends EcdcJob {
 			if (isStopped()) {
 				log("Job interrupted, exiting");
 				setStatus("Error, job interrupted");
-				setProgress(75);
+				setProgress(77);
 				return null;
 			}
 			
-			setStatus("Submitting to ECDC SFTP");
-			setProgress(75);
-			log("Launching SFTP UPLOAD job");
 			
-			// Create and run a job for submitting to SFTP
-			EcdcSftpUploadWorker sftpWorker = gui.getSftpWorker(name, selectedRows);
-			if (sftpWorker!=null) {
-				sftpWorker.execute();
-			} else {
-				log("GUI returned null sftpWorker, likely an error in the isolate table");
-				return null;
-			}
-			
-			// Wait for the job to finish
-			boolean done=false;
-			while (!done) {
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-				}
-				
-				// Check if this job was interrupted
-				if (sftpWorker.isStopped()) {
-					log("Job interrupted, exiting");
-					setStatus("Error, job interrupted");
-					setProgress(80);
-					return null;
-				}
-				if (sftpWorker.isDone()) {
-					done=true;
-				}
-			}
 			
 			
 		}
